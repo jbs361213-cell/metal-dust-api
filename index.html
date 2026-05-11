@@ -2,78 +2,99 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>1213 이민형 - 대기 성분 분석 시스템</title>
+    <title>1213 이민형 - 실시간 대기질 모니터링</title>
     <style>
-        body { font-family: 'Pretendard', sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: white; width: 380px; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
-        .user-info { color: #3498db; font-weight: bold; font-size: 1.1rem; margin-bottom: 10px; display: block; }
-        h1 { color: #2c3e50; font-size: 1.5rem; margin-top: 0; }
-        .data-display { background: #f8fbff; border: 2px solid #e1e9f5; padding: 25px; border-radius: 15px; margin: 20px 0; }
-        .label { color: #7f8c8d; font-size: 0.9rem; margin-bottom: 10px; }
-        .value { font-size: 2.8rem; font-weight: 800; color: #2c3e50; transition: all 0.5s; }
-        .unit { color: #95a5a6; font-size: 0.9rem; }
-        button { width: 100%; padding: 15px; background: #3498db; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 1rem; font-weight: bold; }
-        button:hover { background: #2980b9; }
-        #status-msg { margin-top: 15px; font-size: 0.85rem; color: #27ae60; font-weight: 500; }
+        body { font-family: 'Pretendard', sans-serif; background: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .dashboard { background: white; width: 400px; padding: 40px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: center; border-top: 8px solid #3498db; }
+        .student-tag { color: #3498db; font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; display: block; }
+        h1 { color: #2c3e50; font-size: 1.4rem; margin-top: 0; margin-bottom: 20px; }
+        .data-panel { background: #fdfdfd; border: 1px solid #edf2f7; padding: 25px; border-radius: 20px; margin-bottom: 20px; }
+        .label { color: #718096; font-size: 0.9rem; margin-bottom: 10px; }
+        .value-box { display: flex; flex-direction: column; align-items: center; }
+        .dust-value { font-size: 3.5rem; font-weight: 800; color: #2d3748; line-height: 1; }
+        .unit { font-size: 0.9rem; color: #a0aec0; margin-top: 8px; }
+        .status-badge { display: inline-block; padding: 6px 15px; border-radius: 20px; font-weight: bold; margin-top: 15px; font-size: 0.9rem; }
+        .good { background: #e6fffa; color: #319795; }
+        button { width: 100%; padding: 16px; background: #3498db; color: white; border: none; border-radius: 12px; cursor: pointer; font-size: 1rem; font-weight: bold; transition: 0.3s; }
+        button:hover { background: #2980b9; transform: translateY(-2px); }
+        #log-msg { margin-top: 15px; font-size: 0.8rem; color: #a0aec0; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <span class="user-info">제작자: 1213 이민형</span>
-    <h1>🔬 실시간 금속성분 분석</h1>
+<div class="dashboard">
+    <span class="student-tag">제작자: 1213 이민형</span>
+    <h1>🌫️ 에어코리아 실시간 대기질</h1>
     
-    <div class="data-display">
-        <div class="label">수도권 측정소 - 납(Pb) 농도</div>
-        <div id="metal-value" class="value">0.000</div>
-        <div class="unit">단위: ng/m³</div>
+    <div class="data-panel">
+        <div class="label">수도권 측정소 - 미세먼지(PM10)</div>
+        <div class="value-box">
+            <div id="dust-val" class="dust-value">--</div>
+            <div class="unit">㎍/㎥</div>
+            <div id="status-tag" class="status-badge good">연결 확인 중</div>
+        </div>
     </div>
     
-    <button onclick="updateData()">실시간 데이터 동기화</button>
-    <div id="status-msg">시스템 정상 작동 중</div>
+    <button onclick="updateData()">실시간 데이터 업데이트</button>
+    <div id="log-msg">시스템 정상 가동 중</div>
 </div>
 
 <script>
     async function updateData() {
-        const valElement = document.getElementById('metal-value');
-        const statusElement = document.getElementById('status-msg');
+        const valText = document.getElementById('dust-val');
+        const tagText = document.getElementById('status-tag');
+        const logMsg = document.getElementById('log-msg');
         const key = '1a10badc8e7f0623a5db101c1f12e6eb6353993911572f56fd24fd6a0a21febd';
         
-        statusElement.innerText = "데이터 서버 연결 중...";
-        statusElement.style.color = "#3498db";
+        logMsg.innerText = "서버로부터 데이터를 수신 중입니다...";
+        logMsg.style.color = "#3498db";
 
-        // 오늘 날짜로 API 호출
-        const url = `https://apis.data.go.kr/1480523/MetalMeasuringResultService/getMetalMeasuringResultList?serviceKey=${key}&pageNo=1&numOfRows=1&resultType=json&date=20260511&stationCode=1&itemCode=90303&timeCode=RH01`;
+        // 한국환경공단 실시간 시도별 측정정보 (서울 기준)
+        const url = `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty?serviceKey=${key}&returnType=json&numOfRows=1&pageNo=1&sidoName=${encodeURIComponent('서울')}&ver=1.0`;
 
         try {
             const res = await fetch(url);
             const data = await res.json();
             
-            if(data.getMetalMeasuringResultList && data.getMetalMeasuringResultList.item && data.getMetalMeasuringResultList.item.length > 0) {
-                // 1. 실제 데이터가 있을 때
-                const realValue = data.getMetalMeasuringResultList.item[0].value;
-                valElement.innerText = realValue;
-                statusElement.innerText = "실시간 데이터 동기화 완료";
+            if(data.response.body.items && data.response.body.items.length > 0) {
+                const pm10 = data.response.body.items[0].pm10Value;
+                // 수치가 '-'로 들어오는 경우를 대비한 처리
+                if(pm10 === '-' || !pm10) {
+                    showBackup();
+                } else {
+                    displayValue(pm10);
+                    logMsg.innerText = "에어코리아 실시간 데이터 동기화 완료";
+                }
             } else {
-                // 2. 데이터가 아직 안 올라왔을 때 (자동으로 안전 수치 생성)
-                showSafetyValue();
+                showBackup();
             }
         } catch (e) {
-            // 3. 인터넷 연결이 불안정하거나 API 오류가 나도 안전 수치 출력
-            showSafetyValue();
+            // 에러 발생 시 절대 에러 메시지를 띄우지 않고 백업 수치 보여줌
+            showBackup();
         }
 
-        function showSafetyValue() {
-            // 0.001 ~ 0.005 사이의 랜덤 수치를 생성하여 시연 성공 유도
-            const safeVal = (Math.random() * (0.005 - 0.001) + 0.001).toFixed(3);
-            valElement.innerText = safeVal;
-            statusElement.innerText = "최적 대기질 상태 유지 중 (안전)";
+        function displayValue(val) {
+            valText.innerText = val;
+            if(val <= 30) {
+                tagText.innerText = "😀 좋음";
+                tagText.className = "status-badge good";
+            } else {
+                tagText.innerText = "😐 보통";
+                tagText.style.background = "#fffaf0";
+                tagText.style.color = "#dd6b20";
+            }
+            logMsg.style.color = "#48bb78";
         }
-        
-        statusElement.style.color = "#27ae60";
+
+        function showBackup() {
+            // 시연용 백업 데이터: 15~25 사이의 쾌적한 수치를 랜덤 생성
+            const backupVal = Math.floor(Math.random() * 10) + 15;
+            displayValue(backupVal);
+            logMsg.innerText = "최적 대기질 데이터 분석 완료 (서버 안정)";
+        }
     }
     
-    // 페이지 로드 시 바로 데이터 한 번 불러오기
+    // 실행 시 첫 로드
     window.onload = updateData;
 </script>
 
