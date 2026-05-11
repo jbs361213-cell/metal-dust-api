@@ -1,0 +1,27 @@
+import requests
+
+# 공유해주신 인증키 적용
+SERVICE_KEY = '1a10badc8e7f0623a5db101c1f12e6eb6353993911572f56fd24fd6a0a21febd'
+
+def get_metal_data():
+    url = 'http://apis.data.go.kr/1480523/MetalMeasuringResultService/getMetalMeasuringResultList'
+    params = {
+        'serviceKey': SERVICE_KEY,
+        'pageNo': '1',
+        'numOfRows': '10',
+        'resultType': 'json',
+        'date': '20260510',  # 가장 최근 날짜로 변경 가능
+        'stationCode': '1',  # 수도권 측정소 예시
+        'itemCode': '90303', # 납(Pb) 코드 예시
+        'timeCode': 'RH01'   # 1시간 평균
+    }
+    
+    try:
+        response = requests.get(url, params=params)
+        return response.json()
+    except Exception as e:
+        return f"Error: {e}"
+
+# 데이터 구조 확인 출력
+if __name__ == "__main__":
+    print(get_metal_data())
